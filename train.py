@@ -59,10 +59,10 @@ def train(self, loader, net, optim, beta, device, global_step, writer):
         step = global_step + (i + 1)
         x = x.to(device)
         x_, mu, logvar = net(x)
-        _reconstruction_loss = reconstruction_loss(x, x_r)
-        total_kl_divergence = kl_divergence(mu, logvar)
+        reconstruction_loss = reconstruction_loss(x, x_)
+        sum_kl_divergence = kl_divergence(mu, logvar)
 
-        beta_vae_loss = rcnst_loss + beta*total_kld
+        beta_vae_loss = reconstruction_loss + beta*sum_kld
 
         optim.zero_grad()
         beta_vae_loss.backward()
