@@ -1,20 +1,17 @@
-from tqdm import tqdm
+import os
+import numpy as np
 
 import torch
-import torch.optim as optim
-import torch.nn as nn
 import torch.nn.functional as F
-from torchvision.utils import make_grid, save_image
-from tensorboardX import SummaryWriter
+from torchvision import transforms
+from torch.utils.data import Dataset, DataLoader
+from torchvision.datasets import ImageFolder
 
 
 def reconstruction_loss(self, x, x_, distribution):
     batch_size = x.size(0)
-    if distribution == 'bernoulli':
-        _reconstruction_loss = F.binary_cross_entropy_with_logits(x_, x, size_average=False)
-    elif distribution == 'gaussian':
-        x_ = F.sigmoid(x_)
-        _reconstruction_loss = F.mse_loss(x_, x, size_average=False)
+    x_ = F.sigmoid(x_)
+    _reconstruction_loss = F.mse_loss(x_, x, size_average=False)
     return _reconstruction_loss.div(batch_size)
 
 
@@ -25,8 +22,37 @@ def kl_divergence(self, mu, logvar):
         logvar = logvar.view(logvar.size(0), logvar.size(1))
 
     _kl_divergence = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
-    total_kl_divergence = _kl_divergence.sum(1).mean(0, True)
-    dimension_wise_kl_divergence = _kl_divergence.mean(0)
-    mean_kl_divergence = _kl_divergence.mean(1).mean(0, True)
+    sum_kl_divergence = _kl_divergence.sum(1).mean(0, True)
+    # dimension_wise_kl_divergence = _kl_divergence.mean(0)
+    # mean_kl_divergence = _kl_divergence.mean(1).mean(0, True)
 
-    return total_kl_divergence, dimension_wise_kl_divergence, mean_kl_divergence
+    return sum_kl_divergence, # dimension_wise_kl_divergence, mean_kl_divergence
+
+
+class CustomImageFolder(ImageFolder):
+    def __init__(self, root, transform=None):
+        super(CustomImageFolder, self).__init__(root, transform)
+
+    def __getitem__(self, index):
+        path = self.imgs[index][0]
+        img = self.loader(path)
+        if self.transform is not None:
+            img = self.transform(img)
+        return img
+
+
+def dataloader(dataset_dir, image_size, batch_size, num_workers):
+    root = os.path.join(dataset_dir)
+    transform = transforms.Compose([
+        transforms.Resize((image_size, image_size)),
+        transforms.ToTensor()])
+    dataset = CustomImageFolder(root, transform)
+    loader = DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+        pin_memory=True,
+        drop_last=True)
+
+    return loader
