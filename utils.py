@@ -10,7 +10,6 @@ from torchvision.datasets import ImageFolder
 
 def reconstruction_loss(self, x, x_, distribution):
     batch_size = x.size(0)
-    x_ = F.sigmoid(x_)
     reconstruction_loss = F.mse_loss(x_, x, size_average=False)
     return reconstruction_loss.div(batch_size)
 
@@ -23,10 +22,8 @@ def kl_divergence(self, mu, logvar):
 
     kl_divergence = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
     sum_kl_divergence = kl_divergence.sum(1).mean(0, True)
-    # dimension_wise_kl_divergence = _kl_divergence.mean(0)
-    # mean_kl_divergence = _kl_divergence.mean(1).mean(0, True)
 
-    return sum_kl_divergence, # dimension_wise_kl_divergence, mean_kl_divergence
+    return sum_kl_divergence
 
 
 class CustomImageFolder(ImageFolder):
