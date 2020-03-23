@@ -62,7 +62,7 @@ def train(self, loader, net, optim, beta, device, global_step, writer):
         reconstruction_loss = reconstruction_loss(x, x_)
         sum_kl_divergence = kl_divergence(mu, logvar)
 
-        beta_vae_loss = reconstruction_loss + beta*sum_kld
+        beta_vae_loss = reconstruction_loss + beta*sum_kl_divergence
 
         optim.zero_grad()
         beta_vae_loss.backward()
