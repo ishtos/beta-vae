@@ -8,13 +8,13 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision.datasets import ImageFolder
 
 
-def reconstruction_loss(self, x, x_, distribution):
+def reconstruction_loss(x, x_):
     batch_size = x.size(0)
     reconstruction_loss = F.mse_loss(x_, x, size_average=False)
     return reconstruction_loss.div(batch_size)
 
 
-def kl_divergence(self, mu, logvar):
+def kl_divergence(mu, logvar):
     if mu.data.ndimension() == 4:
         mu = mu.view(mu.size(0), mu.size(1))
     if logvar.data.ndimension() == 4:
